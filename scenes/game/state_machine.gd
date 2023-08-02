@@ -19,10 +19,6 @@ func _process(delta):
 	if current_state:
 		current_state.update(delta)
 
-func _physics_process(delta):
-	if current_state:
-		current_state.physics_update(delta)
-
 func _on_state_change(state, new_state_name):
 	if state != current_state:
 		return
