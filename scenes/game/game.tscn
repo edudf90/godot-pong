@@ -1,0 +1,117 @@
+[gd_scene load_steps=20 format=3 uid="uid://cq2vkfu5rkiu"]
+
+[ext_resource type="Script" path="res://scenes/game/game.gd" id="1_pmojw"]
+[ext_resource type="PackedScene" uid="uid://c4vlf6r8wb3nj" path="res://scenes/ball/ball.tscn" id="2_nkefm"]
+[ext_resource type="PackedScene" uid="uid://b6xjhq5v5uj6" path="res://scenes/paddle_owner/paddle_owner.tscn" id="3_b1o2e"]
+[ext_resource type="Script" path="res://scenes/game/player.gd" id="4_mx3ck"]
+[ext_resource type="Script" path="res://scenes/game/adversary.gd" id="5_b2wpb"]
+[ext_resource type="PackedScene" uid="uid://cum117cawgxa7" path="res://scenes/wall/wall.tscn" id="6_g3m11"]
+[ext_resource type="Script" path="res://scenes/game/state_machine.gd" id="7_7lu11"]
+[ext_resource type="Script" path="res://scenes/game/initial_state.gd" id="8_37gde"]
+[ext_resource type="Script" path="res://scenes/game/playing_state.gd" id="9_amq0j"]
+[ext_resource type="Script" path="res://scenes/game/paused_state.gd" id="10_8bkbu"]
+[ext_resource type="PackedScene" uid="uid://ir8oxqaarpyb" path="res://scenes/net/net.tscn" id="11_6q13l"]
+[ext_resource type="AudioStream" uid="uid://kuh45osk16wb" path="res://scenes/game/ball_collision.wav" id="12_80bk0"]
+[ext_resource type="Script" path="res://scenes/game/audio_stream_player.gd" id="13_o4m3r"]
+[ext_resource type="Script" path="res://scenes/game/player_score.gd" id="14_whdt5"]
+[ext_resource type="Script" path="res://scenes/game/adversary_score.gd" id="15_478na"]
+[ext_resource type="PackedScene" uid="uid://bye3xbsy2gguo" path="res://scenes/pause_menu/pause_menu.tscn" id="15_ivh3q"]
+[ext_resource type="PackedScene" uid="uid://dy0alrk51exp7" path="res://scenes/initial_instructions/initial_instructions.tscn" id="16_lofoe"]
+[ext_resource type="Script" path="res://scenes/initial_instructions/initial_instructions.gd" id="17_e73fv"]
+[ext_resource type="AudioStream" uid="uid://bhuqkhndqlnn7" path="res://scenes/game/pong_game.wav" id="18_u4kpn"]
+
+[node name="Game" type="Node2D"]
+script = ExtResource("1_pmojw")
+
+[node name="Ball" parent="." instance=ExtResource("2_nkefm")]
+position = Vector2(275, 325)
+
+[node name="PlayerOne" parent="." instance=ExtResource("3_b1o2e")]
+position = Vector2(275, 575)
+script = ExtResource("4_mx3ck")
+
+[node name="Adversary" parent="." instance=ExtResource("3_b1o2e")]
+position = Vector2(275, 75)
+script = ExtResource("5_b2wpb")
+
+[node name="LeftWall" parent="." instance=ExtResource("6_g3m11")]
+position = Vector2(20, 325)
+rotation = 3.14159
+
+[node name="RightWall" parent="." instance=ExtResource("6_g3m11")]
+position = Vector2(530, 325)
+
+[node name="StateMachine" type="Node" parent="." node_paths=PackedStringArray("initial_state")]
+process_mode = 3
+script = ExtResource("7_7lu11")
+initial_state = NodePath("InitialState")
+
+[node name="InitialState" type="Node" parent="StateMachine"]
+process_mode = 1
+script = ExtResource("8_37gde")
+
+[node name="PlayingState" type="Node" parent="StateMachine"]
+process_mode = 1
+script = ExtResource("9_amq0j")
+
+[node name="PausedState" type="Node" parent="StateMachine"]
+process_mode = 2
+script = ExtResource("10_8bkbu")
+
+[node name="PlayerNet" parent="." instance=ExtResource("11_6q13l")]
+position = Vector2(275, 688)
+
+[node name="AdversaryNet" parent="." instance=ExtResource("11_6q13l")]
+position = Vector2(275, -37)
+
+[node name="BallCollisionSoundEffect" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("12_80bk0")
+volume_db = -15.0
+script = ExtResource("13_o4m3r")
+
+[node name="PlayerScore" type="Label" parent="."]
+offset_left = 450.0
+offset_top = 620.0
+offset_right = 525.0
+offset_bottom = 646.0
+text = "0"
+script = ExtResource("14_whdt5")
+
+[node name="AdversaryScore" type="Label" parent="."]
+offset_left = 450.0
+offset_top = 5.0
+offset_right = 525.0
+offset_bottom = 31.0
+text = "0"
+script = ExtResource("15_478na")
+
+[node name="PauseMenu" parent="." instance=ExtResource("15_ivh3q")]
+process_mode = 2
+
+[node name="InitialInstructions" parent="." instance=ExtResource("16_lofoe")]
+offset_left = 275.0
+offset_top = 275.0
+offset_right = 275.0
+offset_bottom = 275.0
+script = ExtResource("17_e73fv")
+
+[node name="DivisionLine" type="Line2D" parent="."]
+position = Vector2(0, 328)
+points = PackedVector2Array(20, -2, 531, -2)
+width = 1.0
+
+[node name="BackgroundMusic" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("18_u4kpn")
+volume_db = -15.0
+autoplay = true
+
+[connection signal="ball_collided" from="Ball" to="BallCollisionSoundEffect" method="_on_ball_ball_collided"]
+[connection signal="toggled_initial_state" from="StateMachine/InitialState" to="InitialInstructions" method="_on_initial_state_toggled_initial_state"]
+[connection signal="adversary_scored" from="StateMachine/PlayingState" to="AdversaryScore" method="_on_playing_state_adversary_scored"]
+[connection signal="player_scored" from="StateMachine/PlayingState" to="PlayerScore" method="_on_playing_state_player_scored"]
+[connection signal="toggled_pause" from="StateMachine/PausedState" to="PauseMenu" method="_on_paused_state_toggled_pause"]
+[connection signal="body_entered" from="PlayerNet" to="Ball" method="_on_player_net_body_entered"]
+[connection signal="body_entered" from="PlayerNet" to="Adversary" method="_on_player_net_body_entered"]
+[connection signal="body_entered" from="AdversaryNet" to="Ball" method="_on_adversary_net_body_entered"]
+[connection signal="body_entered" from="AdversaryNet" to="Adversary" method="_on_adversary_net_body_entered"]
+[connection signal="resume_button_pressed" from="PauseMenu" to="StateMachine/PausedState" method="_on_pause_menu_resume_button_pressed"]

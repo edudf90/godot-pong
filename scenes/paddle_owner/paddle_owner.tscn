@@ -1,0 +1,15 @@
+[gd_scene load_steps=2 format=3 uid="uid://b6xjhq5v5uj6"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3xux8"]
+
+[node name="PaddleOwner" type="CharacterBody2D"]
+scale = Vector2(5, 0.5)
+motion_mode = 1
+floor_constant_speed = true
+metadata/_edit_group_ = true
+
+[node name="PaddleCollisionShape" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_3xux8")
+
+[node name="PaddlePolygon" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-10, -10, -10, 0, -10, 10, 10, 10, 10, -10)
