@@ -20,10 +20,6 @@ func _physics_process(delta):
 		if (collider_velocity.x > 0):
 			vel_x = (vel_x + collider_velocity.x) / 2
 		velocity = Vector2(vel_x, vel_y)
-#		if (collider_velocity.x > 0):
-#			print("Paddle:",velocity)
-#		else:
-#			print("Wall:",velocity)
 		ball_collided.emit()
 
 func reset_ball_initial_position():
