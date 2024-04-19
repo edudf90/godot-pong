@@ -4,8 +4,19 @@ class_name Ball
 
 signal ball_collided
 signal x_direction_changed
+const SPEED = 250.0
 
-const SPEED = 300.0
+const LOWEST_INCLINATION = 0
+const INITIAL_DIRECTION = 1
+const HIGHEST_INCLINATION = 3
+const DIRECTIONS = {
+	0: Vector2(0.866025, -0.5), 
+	1: Vector2(0.707107, -0.707107),
+	2: Vector2(0.5, -0.866025),
+	3: Vector2(0.2588, -0.9659)
+	}
+	
+var direction = INITIAL_DIRECTION
 
 func _ready():
 	add_to_group("balls")
@@ -17,9 +28,19 @@ func _physics_process(delta):
 		var bounced_velocity = velocity.bounce(collision_info.get_normal())
 		var vel_x = bounced_velocity.x
 		var vel_y = bounced_velocity.y
-		if (collider_velocity.x > 0):
-			vel_x = (vel_x + collider_velocity.x) / 2
-		velocity = Vector2(vel_x, vel_y)
+		var collider = collision_info.get_collider()
+		velocity = Vector2(vel_x, vel_y).normalized() * SPEED
+		if collider is CharacterBody2D && collider_velocity.x != 0:
+			var direction_multiplier = Vector2(1.0, 1.0)
+			if (sign(collider_velocity.x) == sign(velocity.x)):
+				direction = max(direction - 1, LOWEST_INCLINATION);
+			else:
+				if (direction == HIGHEST_INCLINATION):
+					direction_multiplier = direction_multiplier * Vector2(-1.0, 1.0)
+				direction = min(direction + 1, HIGHEST_INCLINATION);
+			if velocity.x < 0:
+				direction_multiplier = direction_multiplier * Vector2(-1.0, 1.0)
+			velocity = DIRECTIONS[direction] * direction_multiplier * SPEED
 		ball_collided.emit()
 
 func reset_ball_initial_position():
@@ -35,13 +56,18 @@ func stop_ball():
 	velocity.y = 0
 
 func restart_ball_movement():
-	set_random_initial_velocity()
-
-func set_random_initial_velocity():
-	var x_direction = randi() % 50 + 41 if randi() % 2 == 0 else -randi() % 50 - 41
-	var y_direction = 60 if randi() % 2 == 0 else -60
-	velocity.x = x_direction * 0.01 * SPEED
-	velocity.y = y_direction * 0.01 * SPEED
+	direction = randi() % 3
+	var direction_multiplier = Vector2(1.0, 1.0)
+	match randi() % 4:
+		0:
+			direction_multiplier = Vector2(1.0, 1.0)
+		1:
+			direction_multiplier = Vector2(-1.0, 1.0)
+		2:
+			direction_multiplier = Vector2(1.0, -1.0)
+		3:
+			direction_multiplier = Vector2(-1.0, -1.0)
+	velocity = DIRECTIONS[direction] * direction_multiplier * SPEED
 
 func _on_player_net_body_entered(body):
 	if body is Ball:
